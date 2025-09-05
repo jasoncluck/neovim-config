@@ -5,7 +5,7 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- Window resize
-vim.keymap.set('n', '<M-h>', '<C-w><', { desc = 'Decrease window width' })
-vim.keymap.set('n', '<M-l>', '<C-w>>', { desc = 'Increase window width' })
+vim.keymap.set('n', '<M-l>', '<C-w><', { desc = 'Increase window width' })
+vim.keymap.set('n', '<M-h>', '<C-w>>', { desc = 'Decrease window width' })
 vim.keymap.set('n', '<M-j>', '<C-w>-', { desc = 'Decrease window height' })
 vim.keymap.set('n', '<M-k>', '<C-w>+', { desc = 'Increase window height' })
