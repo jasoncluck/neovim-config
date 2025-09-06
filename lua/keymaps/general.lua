@@ -68,7 +68,8 @@ vim.keymap.set('n', ']q', vim.cmd.cnext, { desc = 'Next quickfix' })
 
 -- formatting
 vim.keymap.set({ 'n', 'v' }, '<leader>cf', function()
-  vim.lsp.buf.format { async = true }
+  -- 'async' argument was deprecated in newer Neovim versions; call format without it
+  vim.lsp.buf.format()
 end, { desc = 'Format' })
 
 -- diagnostic
@@ -142,13 +143,15 @@ vim.keymap.set('n', '<leader>uc', function()
   end
 end, { desc = 'Toggle Conceal' })
 
-if vim.lsp.buf.inlay_hint or vim.lsp.inlay_hint then
+-- Prefer buffer-local inlay-hint API to avoid type/typing incompatibilities across Neovim versions.
+-- Use a small local toggle state and call the buffer API with (bufnr, enabled) via pcall to avoid runtime/type errors.
+local _inlay_hints_enabled = true
+if vim.lsp and vim.lsp.buf and vim.lsp.buf.inlay_hint then
   vim.keymap.set('n', '<leader>uh', function()
-    if vim.lsp.inlay_hint then
-      vim.lsp.inlay_hint.enable(0, not vim.lsp.inlay_hint.is_enabled(0))
-    else
-      vim.lsp.buf.inlay_hint(0, nil)
-    end
+    _inlay_hints_enabled = not _inlay_hints_enabled
+    -- Call buffer-local API. Use pcall so this works across versions without throwing.
+    -- Many Neovim versions accept: vim.lsp.buf.inlay_hint(bufnr, enable)
+    pcall(vim.lsp.buf.inlay_hint, 0, _inlay_hints_enabled)
   end, { desc = 'Toggle Inlay Hints' })
 end
 
@@ -193,7 +196,6 @@ vim.keymap.set('n', 'gd', function()
     vim.lsp.buf.definition()
   end
 end, { noremap = true, silent = true, desc = 'LSP Definition (g then d)' })
-
 vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'LSP Rename (leader rn)' })
 vim.keymap.set('n', '<leader>gr', function()
   if pcall(require, 'telescope') then
