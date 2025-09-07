@@ -1,12 +1,5 @@
 -- Core keymaps
 
--- Clear highlights on search when pressing <Esc> in normal mode
--- Note: This is redundant with the combined version below, removing this one
--- vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
-
--- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
@@ -92,12 +85,6 @@ vim.keymap.set('n', '<leader>ul', function()
   vim.o.relativenumber = not vim.o.relativenumber
   print('Relative line numbers ' .. (vim.o.relativenumber and 'enabled' or 'disabled'))
 end, { desc = 'Toggle Relative Line Numbers' })
-
-vim.keymap.set('n', '<leader>ud', function()
-  local is_enabled = vim.diagnostic.is_enabled()
-  vim.diagnostic.enable(not is_enabled)
-  print('Diagnostics ' .. (not is_enabled and 'enabled' or 'disabled'))
-end, { desc = 'Toggle Diagnostics' })
 
 local conceallevel = vim.o.conceallevel > 0 and vim.o.conceallevel or 3
 vim.keymap.set('n', '<leader>uc', function()
