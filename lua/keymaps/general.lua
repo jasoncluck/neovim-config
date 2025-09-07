@@ -1,7 +1,8 @@
 -- Core keymaps
 
 -- Clear highlights on search when pressing <Esc> in normal mode
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+-- Note: This is redundant with the combined version below, removing this one
+-- vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -15,7 +16,7 @@ vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
 vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
 vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
--- better up/down
+-- better up/down (consolidated arrow keys with hjkl)
 vim.keymap.set({ 'n', 'x' }, 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 vim.keymap.set({ 'n', 'x' }, '<Down>', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 vim.keymap.set({ 'n', 'x' }, 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
@@ -41,13 +42,13 @@ vim.keymap.set('i', '<A-k>', '<esc><cmd>m .-2<cr>==gi', { desc = 'Move up' })
 vim.keymap.set('v', '<A-j>', ":m '>+1<cr>gv=gv", { desc = 'Move down' })
 vim.keymap.set('v', '<A-k>', ":m '<-2<cr>gv=gv", { desc = 'Move up' })
 
--- buffers
+-- buffers (consolidated duplicate mappings)
 vim.keymap.set('n', '<S-h>', '<cmd>bprevious<cr>', { desc = 'Prev buffer' })
 vim.keymap.set('n', '<S-l>', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 vim.keymap.set('n', '[b', '<cmd>bprevious<cr>', { desc = 'Prev buffer' })
 vim.keymap.set('n', ']b', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 
--- Clear search with <esc>
+-- Clear search with <esc> (combined version, removes redundancy)
 vim.keymap.set({ 'i', 'n' }, '<esc>', '<cmd>noh<cr><esc>', { desc = 'Escape and clear hlsearch' })
 
 -- save file
@@ -68,25 +69,8 @@ vim.keymap.set('n', ']q', vim.cmd.cnext, { desc = 'Next quickfix' })
 
 -- formatting
 vim.keymap.set({ 'n', 'v' }, '<leader>cf', function()
-  -- 'async' argument was deprecated in newer Neovim versions; call format without it
   vim.lsp.buf.format()
 end, { desc = 'Format' })
-
--- diagnostic
-local diagnostic_goto = function(next, severity)
-  local go = next and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
-  severity = severity and vim.diagnostic.severity[severity] or nil
-  return function()
-    go { severity = severity }
-  end
-end
-vim.keymap.set('n', '<leader>cd', vim.diagnostic.open_float, { desc = 'Line Diagnostics' })
-vim.keymap.set('n', ']d', diagnostic_goto(true), { desc = 'Next Diagnostic' })
-vim.keymap.set('n', '[d', diagnostic_goto(false), { desc = 'Prev Diagnostic' })
-vim.keymap.set('n', ']e', diagnostic_goto(true, 'ERROR'), { desc = 'Next Error' })
-vim.keymap.set('n', '[e', diagnostic_goto(false, 'ERROR'), { desc = 'Prev Error' })
-vim.keymap.set('n', ']w', diagnostic_goto(true, 'WARN'), { desc = 'Next Warning' })
-vim.keymap.set('n', '[w', diagnostic_goto(false, 'WARN'), { desc = 'Prev Warning' })
 
 -- toggle options
 vim.keymap.set('n', '<leader>uf', function()
@@ -95,62 +79,36 @@ vim.keymap.set('n', '<leader>uf', function()
 end, { desc = 'Toggle format on save' })
 
 vim.keymap.set('n', '<leader>us', function()
-  if vim.o.spell then
-    vim.o.spell = false
-    print 'Spell checking disabled'
-  else
-    vim.o.spell = true
-    print 'Spell checking enabled'
-  end
+  vim.o.spell = not vim.o.spell
+  print('Spell checking ' .. (vim.o.spell and 'enabled' or 'disabled'))
 end, { desc = 'Toggle Spelling' })
 
 vim.keymap.set('n', '<leader>uw', function()
-  if vim.o.wrap then
-    vim.o.wrap = false
-    print 'Line wrap disabled'
-  else
-    vim.o.wrap = true
-    print 'Line wrap enabled'
-  end
+  vim.o.wrap = not vim.o.wrap
+  print('Line wrap ' .. (vim.o.wrap and 'enabled' or 'disabled'))
 end, { desc = 'Toggle Line Wrap' })
 
 vim.keymap.set('n', '<leader>ul', function()
-  if vim.o.relativenumber then
-    vim.o.relativenumber = false
-    print 'Relative line numbers disabled'
-  else
-    vim.o.relativenumber = true
-    print 'Relative line numbers enabled'
-  end
+  vim.o.relativenumber = not vim.o.relativenumber
+  print('Relative line numbers ' .. (vim.o.relativenumber and 'enabled' or 'disabled'))
 end, { desc = 'Toggle Relative Line Numbers' })
 
 vim.keymap.set('n', '<leader>ud', function()
-  if not vim.diagnostic.is_enabled() then
-    vim.diagnostic.enable()
-    print 'Diagnostics enabled'
-  else
-    vim.diagnostic.enable(false)
-    print 'Diagnostics disabled'
-  end
+  local is_enabled = vim.diagnostic.is_enabled()
+  vim.diagnostic.enable(not is_enabled)
+  print('Diagnostics ' .. (not is_enabled and 'enabled' or 'disabled'))
 end, { desc = 'Toggle Diagnostics' })
 
 local conceallevel = vim.o.conceallevel > 0 and vim.o.conceallevel or 3
 vim.keymap.set('n', '<leader>uc', function()
-  if vim.o.conceallevel == 0 then
-    vim.o.conceallevel = conceallevel
-  else
-    vim.o.conceallevel = 0
-  end
+  vim.o.conceallevel = vim.o.conceallevel == 0 and conceallevel or 0
 end, { desc = 'Toggle Conceal' })
 
--- Prefer buffer-local inlay-hint API to avoid type/typing incompatibilities across Neovim versions.
--- Use a small local toggle state and call the buffer API with (bufnr, enabled) via pcall to avoid runtime/type errors.
+-- Inlay hints toggle
 local _inlay_hints_enabled = true
 if vim.lsp and vim.lsp.buf and vim.lsp.buf.inlay_hint then
   vim.keymap.set('n', '<leader>uh', function()
     _inlay_hints_enabled = not _inlay_hints_enabled
-    -- Call buffer-local API. Use pcall so this works across versions without throwing.
-    -- Many Neovim versions accept: vim.lsp.buf.inlay_hint(bufnr, enable)
     pcall(vim.lsp.buf.inlay_hint, 0, _inlay_hints_enabled)
   end, { desc = 'Toggle Inlay Hints' })
 end
@@ -169,47 +127,28 @@ vim.keymap.set('n', '<leader><tab>]', '<cmd>tabnext<cr>', { desc = 'Next Tab' })
 vim.keymap.set('n', '<leader><tab>d', '<cmd>tabclose<cr>', { desc = 'Close Tab' })
 vim.keymap.set('n', '<leader><tab>[', '<cmd>tabprevious<cr>', { desc = 'Previous Tab' })
 
--- LSP mappings:
--- Keep 'cr' as rename, add 'gr' -> references and 'gd' -> definition.
--- Note: Mapping 'c' as a prefix (e.g., 'cr') will shadow the native 'c' operator.
--- If you want to avoid that, use the safer alternatives shown at the bottom.
-
--- Keep 'cr' for LSP rename
-vim.keymap.set('n', 'cr', function()
-  vim.lsp.buf.rename()
-end, { noremap = true, silent = true, desc = 'LSP Rename (c then r)' })
-
--- 'gr' -> LSP references (prefers Telescope if available)
-vim.keymap.set('n', 'gr', function()
+-- LSP mappings (removed duplicates, kept most intuitive ones)
+local function lsp_references()
   if pcall(require, 'telescope') then
     require('telescope.builtin').lsp_references()
   else
     vim.lsp.buf.references()
   end
-end, { noremap = true, silent = true, desc = 'LSP References (g then r)' })
+end
 
--- 'gd' -> LSP definition (prefers Telescope if available)
-vim.keymap.set('n', 'gd', function()
+local function lsp_definitions()
   if pcall(require, 'telescope') then
     require('telescope.builtin').lsp_definitions()
   else
     vim.lsp.buf.definition()
   end
-end, { noremap = true, silent = true, desc = 'LSP Definition (g then d)' })
-vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'LSP Rename (leader rn)' })
-vim.keymap.set('n', '<leader>gr', function()
-  if pcall(require, 'telescope') then
-    require('telescope.builtin').lsp_references()
-  else
-    vim.lsp.buf.references()
-  end
-end, { desc = 'LSP References (leader gr)' })
-vim.keymap.set('n', '<leader>gd', function()
-  if pcall(require, 'telescope') then
-    require('telescope.builtin').lsp_definitions()
-  else
-    vim.lsp.buf.definition()
-  end
-end, { desc = 'LSP Definition (leader gd)' })
-vim.keymap.set('n', 'gR', vim.lsp.buf.references, { desc = 'LSP References (gR)' })
-vim.keymap.set('n', 'gD', vim.lsp.buf.definition, { desc = 'LSP Definition (gD)' })
+end
+
+-- Primary LSP mappings (using standard vim conventions)
+vim.keymap.set('n', 'gd', lsp_definitions, { desc = 'LSP Definition' })
+vim.keymap.set('n', 'gr', lsp_references, { desc = 'LSP References' })
+vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'LSP Rename' })
+
+-- Alternative mappings for those who prefer leader-based
+vim.keymap.set('n', '<leader>gd', lsp_definitions, { desc = 'LSP Definition (leader)' })
+vim.keymap.set('n', '<leader>gr', lsp_references, { desc = 'LSP References (leader)' })

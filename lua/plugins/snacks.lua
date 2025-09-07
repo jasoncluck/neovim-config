@@ -38,7 +38,14 @@ return {
   keys = {
     -- Top Pickers & Explorer
     {
-      '<leader><space>',
+      '<leader><leader>',
+      function()
+        Snacks.picker.files()
+      end,
+      desc = 'Find Files (Root)',
+    },
+    {
+      '<leader>s',
       function()
         Snacks.picker.smart()
       end,
