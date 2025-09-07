@@ -29,7 +29,7 @@ return {
       -- are visible on all lines at all times.
       vim.diagnostic.config {
         virtual_text = {
-          severity = { min = vim.diagnostic.severity.ERROR },
+          severity = { min = vim.diagnostic.severity.INFO },
           -- Optional: add a custom format function if you want to shorten messages:
           -- format = function(d)
           --   return d.message
