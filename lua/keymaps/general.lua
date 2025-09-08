@@ -139,3 +139,6 @@ vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'LSP Rename' })
 -- Alternative mappings for those who prefer leader-based
 vim.keymap.set('n', '<leader>gd', lsp_definitions, { desc = 'LSP Definition (leader)' })
 vim.keymap.set('n', '<leader>gr', lsp_references, { desc = 'LSP References (leader)' })
+
+-- Rename keymap with 'c' then 'r'
+vim.keymap.set('n', 'cr', vim.lsp.buf.rename, { desc = 'LSP Rename' })
