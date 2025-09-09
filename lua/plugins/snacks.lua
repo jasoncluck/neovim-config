@@ -629,21 +629,46 @@ return {
         Snacks.toggle.dim():map '<leader>uD'
 
         -- Additional autocmd to ensure terminal navigation works in all contexts
+        -- Use buffer-local terminal-mode mappings that explicitly exit terminal-input mode,
+        -- run the window command, and thereby work reliably even while the terminal is receiving input.
         vim.api.nvim_create_autocmd('TermOpen', {
           pattern = '*',
           callback = function(event)
             local opts = { buffer = event.buf, silent = true }
-            -- Set up terminal-specific keymaps that work in terminal mode (t)
-            vim.keymap.set('t', '<C-h>', '<cmd>wincmd h<cr>', opts)
-            vim.keymap.set('t', '<C-j>', '<cmd>wincmd j<cr>', opts)
-            vim.keymap.set('t', '<C-k>', '<cmd>wincmd k<cr>', opts)
-            vim.keymap.set('t', '<C-l>', '<cmd>wincmd l<cr>', opts)
-            -- Allow toggling terminal with Ctrl+/ in terminal mode as well
-            vim.keymap.set('t', '<C-/>', function() Snacks.terminal() end, opts)
-            vim.keymap.set('t', '<C-_>', function() Snacks.terminal() end, opts)
+
+            -- helper that exits terminal mode and performs a wincmd
+            local function make_win_nav(key)
+              return function()
+                -- build the sequence: <C-\><C-n><C-w>{key}
+                local seq = '<C-\\><C-n><C-w>' .. key
+                local t = vim.api.nvim_replace_termcodes(seq, true, false, true)
+                -- feed the sequence so Neovim handles it even if terminal was actively receiving input
+                vim.api.nvim_feedkeys(t, 'n', true)
+              end
+            end
+
+            -- terminal-mode mappings (buffer local) that reliably navigate between windows
+            vim.keymap.set('t', '<C-h>', make_win_nav 'h', opts)
+            vim.keymap.set('t', '<C-j>', make_win_nav 'j', opts)
+            vim.keymap.set('t', '<C-k>', make_win_nav 'k', opts)
+            vim.keymap.set('t', '<C-l>', make_win_nav 'l', opts)
+
+            -- Map Ctrl+/ and Ctrl+_ in terminal mode to toggle Snacks' terminal.
+            -- We first exit terminal mode before calling the toggle so it behaves consistently.
+            vim.keymap.set('t', '<C-/>', function()
+              local t = vim.api.nvim_replace_termcodes('<C-\\><C-n>', true, false, true)
+              vim.api.nvim_feedkeys(t, 'n', true)
+              Snacks.terminal()
+            end, opts)
+            vim.keymap.set('t', '<C-_>', function()
+              local t = vim.api.nvim_replace_termcodes('<C-\\><C-n>', true, false, true)
+              vim.api.nvim_feedkeys(t, 'n', true)
+              Snacks.terminal()
+            end, opts)
           end,
         })
       end,
     })
   end,
 }
+
