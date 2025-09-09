@@ -486,6 +486,7 @@ return {
         Snacks.terminal()
       end,
       desc = 'Toggle Terminal',
+      mode = { 'n', 't', 'i' },
     },
     {
       '<c-_>',
@@ -493,6 +494,7 @@ return {
         Snacks.terminal()
       end,
       desc = 'which_key_ignore',
+      mode = { 'n', 't', 'i' },
     },
     -- Terminal navigation keymaps for normal mode
     {
@@ -631,11 +633,14 @@ return {
           pattern = '*',
           callback = function(event)
             local opts = { buffer = event.buf, silent = true }
-            -- Set up terminal-specific keymaps that work in both terminal and insert mode
+            -- Set up terminal-specific keymaps that work in terminal mode (t)
             vim.keymap.set('t', '<C-h>', '<cmd>wincmd h<cr>', opts)
             vim.keymap.set('t', '<C-j>', '<cmd>wincmd j<cr>', opts)
             vim.keymap.set('t', '<C-k>', '<cmd>wincmd k<cr>', opts)
             vim.keymap.set('t', '<C-l>', '<cmd>wincmd l<cr>', opts)
+            -- Allow toggling terminal with Ctrl+/ in terminal mode as well
+            vim.keymap.set('t', '<C-/>', function() Snacks.terminal() end, opts)
+            vim.keymap.set('t', '<C-_>', function() Snacks.terminal() end, opts)
           end,
         })
       end,
