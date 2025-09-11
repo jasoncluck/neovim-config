@@ -2,6 +2,10 @@ return {
   'saghen/blink.cmp',
   event = 'VimEnter',
   version = '1.*',
+  -- Add build step to compile the native fuzzy library
+  build = function()
+    return 'cargo build --release'
+  end,
   dependencies = {
     {
       'L3MON4D3/LuaSnip',
@@ -34,7 +38,8 @@ return {
       },
     },
     snippets = { preset = 'luasnip' },
-    fuzzy = { implementation = 'lua' },
+    -- Remove the fuzzy config to use default (native) implementation
+    -- fuzzy = { implementation = 'lua' },
     signature = { enabled = true },
   },
 }
