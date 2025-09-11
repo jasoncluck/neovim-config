@@ -21,12 +21,13 @@ return {
     words = { enabled = true },
     terminal = {
       win = {
-        keys = {
-          nav_h = { '<C-h>', '<C-h>', desc = 'Go to Left Window', expr = true, mode = 't' },
-          nav_j = { '<C-j>', '<C-j>', desc = 'Go to Lower Window', expr = true, mode = 't' },
-          nav_k = { '<C-k>', '<C-k>', desc = 'Go to Upper Window', expr = true, mode = 't' },
-          nav_l = { '<C-l>', '<C-l>', desc = 'Go to Right Window', expr = true, mode = 't' },
-        },
+        -- Remove the conflicting keys section entirely
+        -- keys = {
+        --   nav_h = { '<C-h>', '<C-h>', desc = 'Go to Left Window', expr = true, mode = 't' },
+        --   nav_j = { '<C-j>', '<C-j>', desc = 'Go to Lower Window', expr = true, mode = 't' },
+        --   nav_k = { '<C-k>', '<C-k>', desc = 'Go to Upper Window', expr = true, mode = 't' },
+        --   nav_l = { '<C-l>', '<C-l>', desc = 'Go to Right Window', expr = true, mode = 't' },
+        -- },
       },
     },
     styles = {
@@ -486,7 +487,7 @@ return {
         Snacks.terminal()
       end,
       desc = 'Toggle Terminal',
-      mode = { 'n', 't', 'i' },
+      mode = { 'n', 'i' }, -- Remove 't' mode from here since we handle it in autocmd
     },
     {
       '<c-_>',
@@ -494,79 +495,35 @@ return {
         Snacks.terminal()
       end,
       desc = 'which_key_ignore',
-      mode = { 'n', 't', 'i' },
+      mode = { 'n', 'i' }, -- Remove 't' mode from here since we handle it in autocmd
     },
-    -- Terminal navigation keymaps for normal mode
+    -- Normal mode window navigation
     {
       '<C-h>',
       '<cmd>wincmd h<cr>',
       desc = 'Go to Left Window',
+      mode = 'n',
     },
     {
       '<C-j>',
       '<cmd>wincmd j<cr>',
       desc = 'Go to Lower Window',
+      mode = 'n',
     },
     {
       '<C-k>',
       '<cmd>wincmd k<cr>',
       desc = 'Go to Upper Window',
+      mode = 'n',
     },
     {
       '<C-l>',
       '<cmd>wincmd l<cr>',
       desc = 'Go to Right Window',
+      mode = 'n',
     },
-    -- Terminal navigation keymaps for terminal mode
-    {
-      '<C-h>',
-      '<cmd>wincmd h<cr>',
-      desc = 'Go to Left Window',
-      mode = 't',
-    },
-    {
-      '<C-j>',
-      '<cmd>wincmd j<cr>',
-      desc = 'Go to Lower Window',
-      mode = 't',
-    },
-    {
-      '<C-k>',
-      '<cmd>wincmd k<cr>',
-      desc = 'Go to Upper Window',
-      mode = 't',
-    },
-    {
-      '<C-l>',
-      '<cmd>wincmd l<cr>',
-      desc = 'Go to Right Window',
-      mode = 't',
-    },
-    -- Terminal navigation keymaps for insert mode
-    {
-      '<C-h>',
-      '<cmd>wincmd h<cr>',
-      desc = 'Go to Left Window',
-      mode = 'i',
-    },
-    {
-      '<C-j>',
-      '<cmd>wincmd j<cr>',
-      desc = 'Go to Lower Window',
-      mode = 'i',
-    },
-    {
-      '<C-k>',
-      '<cmd>wincmd k<cr>',
-      desc = 'Go to Upper Window',
-      mode = 'i',
-    },
-    {
-      '<C-l>',
-      '<cmd>wincmd l<cr>',
-      desc = 'Go to Right Window',
-      mode = 'i',
-    },
+    -- Remove the redundant terminal and insert mode mappings from here
+    -- since they conflict with the autocmd approach
     {
       ']]',
       function()
@@ -628,42 +585,45 @@ return {
         Snacks.toggle.indent():map '<leader>ug'
         Snacks.toggle.dim():map '<leader>uD'
 
-        -- Additional autocmd to ensure terminal navigation works in all contexts
-        -- Use buffer-local terminal-mode mappings that explicitly exit terminal-input mode,
-        -- run the window command, and thereby work reliably even while the terminal is receiving input.
+        -- Terminal-specific keymaps that work reliably
         vim.api.nvim_create_autocmd('TermOpen', {
           pattern = '*',
           callback = function(event)
             local opts = { buffer = event.buf, silent = true }
 
-            -- helper that exits terminal mode and performs a wincmd
+            -- Helper function that exits terminal mode, performs wincmd, and returns to terminal
             local function make_win_nav(key)
               return function()
-                -- build the sequence: <C-\><C-n><C-w>{key}
+                -- Escape terminal mode, run window command
                 local seq = '<C-\\><C-n><C-w>' .. key
-                local t = vim.api.nvim_replace_termcodes(seq, true, false, true)
-                -- feed the sequence so Neovim handles it even if terminal was actively receiving input
-                vim.api.nvim_feedkeys(t, 'n', true)
+                local termcodes = vim.api.nvim_replace_termcodes(seq, true, false, true)
+                vim.api.nvim_feedkeys(termcodes, 'n', false)
               end
             end
 
-            -- terminal-mode mappings (buffer local) that reliably navigate between windows
+            -- Terminal-mode window navigation (buffer local)
             vim.keymap.set('t', '<C-h>', make_win_nav 'h', opts)
             vim.keymap.set('t', '<C-j>', make_win_nav 'j', opts)
             vim.keymap.set('t', '<C-k>', make_win_nav 'k', opts)
             vim.keymap.set('t', '<C-l>', make_win_nav 'l', opts)
 
-            -- Map Ctrl+/ and Ctrl+_ in terminal mode to toggle Snacks' terminal.
-            -- We first exit terminal mode before calling the toggle so it behaves consistently.
+            -- Terminal toggle keymaps that exit terminal mode first
             vim.keymap.set('t', '<C-/>', function()
-              local t = vim.api.nvim_replace_termcodes('<C-\\><C-n>', true, false, true)
-              vim.api.nvim_feedkeys(t, 'n', true)
-              Snacks.terminal()
+              -- Exit terminal mode first, then toggle
+              local termcodes = vim.api.nvim_replace_termcodes('<C-\\><C-n>', true, false, true)
+              vim.api.nvim_feedkeys(termcodes, 'n', false)
+              vim.schedule(function()
+                Snacks.terminal()
+              end)
             end, opts)
+
             vim.keymap.set('t', '<C-_>', function()
-              local t = vim.api.nvim_replace_termcodes('<C-\\><C-n>', true, false, true)
-              vim.api.nvim_feedkeys(t, 'n', true)
-              Snacks.terminal()
+              -- Exit terminal mode first, then toggle
+              local termcodes = vim.api.nvim_replace_termcodes('<C-\\><C-n>', true, false, true)
+              vim.api.nvim_feedkeys(termcodes, 'n', false)
+              vim.schedule(function()
+                Snacks.terminal()
+              end)
             end, opts)
           end,
         })
@@ -671,4 +631,3 @@ return {
     })
   end,
 }
-
